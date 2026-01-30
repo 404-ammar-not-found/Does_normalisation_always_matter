@@ -1,5 +1,8 @@
 import pickle
 from pathlib import Path
+import numpy as np
+import random
+
 
 import matplotlib.pyplot as plt
 import torch
@@ -24,6 +27,14 @@ DEVICE = (
     if torch.cuda.is_available()
     else "cpu"
 )
+
+
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)  
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 
 def get_transforms(colour_normalised: bool) -> transforms.Compose:

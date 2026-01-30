@@ -1,4 +1,17 @@
+import numpy as np
+import random
+
+import torch
 from torch.utils.data import DataLoader
+
+from config_parameters import SEED
+
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)  
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 
 def generate_dataloader(

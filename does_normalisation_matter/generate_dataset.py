@@ -1,13 +1,22 @@
+
+import numpy as np
+import random
+
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-
 import torch
-
 from PIL import Image, ImageFile
+from torch.utils.data import DataLoader
+from config_parameters import SEED
 
-import os
-import zipfile
 
+
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)  
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 Image.MAX_IMAGE_PIXELS = None
 ImageFile.LOAD_TRUNCATED_IMAGES = True

@@ -1,7 +1,20 @@
+import numpy as np
+import random
+
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+from torchvision.datasets import ImageFolder
 
+from config_parameters import SEED
+
+
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)  
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 def train_model(
     model,
@@ -73,7 +86,6 @@ def train_model(
 
         val_loss /= len(validation_dataloader.dataset)
 
-        # ---- Store results ----
         results["train_loss"].append(train_loss)
         results["val_loss"].append(val_loss)
 
