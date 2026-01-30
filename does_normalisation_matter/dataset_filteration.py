@@ -1,38 +1,59 @@
 from collections import Counter
+
 from torchvision.datasets import ImageFolder
 
 
-def filter_small_classes(dataset: ImageFolder, 
-                         min_samples: int
-                         ) -> ImageFolder:
+def filter_small_classes(
+    dataset: ImageFolder,
+    min_samples: int,
+) -> ImageFolder:
+    """
+    Remove classes from an ImageFolder dataset that have fewer than a
+    specified minimum number of samples.
+
+    The dataset is modified in-place by filtering samples, rebuilding
+    class indices, and remapping targets to ensure consistency.
+    """
     # Count samples per class index
     counts = Counter(dataset.targets)
 
-    # Keep only classes with enough samples
+    # Identify class indices that meet the minimum sample requirement
     keep_class_indices = {
-        cls_idx for cls_idx, c in counts.items() if c >= min_samples
+        class_idx
+        for class_idx, count in counts.items()
+        if count >= min_samples
     }
 
-    # Filter samples
-    new_samples = [
-        (path, cls)
-        for path, cls in dataset.samples
-        if cls in keep_class_indices
+    # Filter samples belonging to retained classes
+    filtered_samples = [
+        (path, class_idx)
+        for path, class_idx in dataset.samples
+        if class_idx in keep_class_indices
     ]
 
-    # Rebuild class mappings
-    old_idx_to_class = {v: k for k, v in dataset.class_to_idx.items()}
-    new_classes = sorted({old_idx_to_class[i] for i in keep_class_indices})
-    new_class_to_idx = {cls: i for i, cls in enumerate(new_classes)}
+    # Rebuild class name mappings
+    old_idx_to_class = {
+        idx: class_name
+        for class_name, idx in dataset.class_to_idx.items()
+    }
 
-    # Remap samples + targets
+    new_classes = sorted(
+        {old_idx_to_class[idx] for idx in keep_class_indices}
+    )
+
+    new_class_to_idx = {
+        class_name: new_idx
+        for new_idx, class_name in enumerate(new_classes)
+    }
+
+    # Remap samples and targets to new class indices
     remapped_samples = [
-        (path, new_class_to_idx[old_idx_to_class[cls]])
-        for path, cls in new_samples
+        (path, new_class_to_idx[old_idx_to_class[class_idx]])
+        for path, class_idx in filtered_samples
     ]
 
     dataset.samples = remapped_samples
-    dataset.targets = [cls for _, cls in remapped_samples]
+    dataset.targets = [class_idx for _, class_idx in remapped_samples]
     dataset.classes = new_classes
     dataset.class_to_idx = new_class_to_idx
 
