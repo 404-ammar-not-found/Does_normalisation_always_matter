@@ -7,28 +7,25 @@ from PIL import Image, ImageFile
 import zipfile
 import os
 
-transform = transforms.Compose([
-    transforms.Resize(255), 
-    transforms.CenterCrop(224),  
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor()]
-)
+
 
 Image.MAX_IMAGE_PIXELS = None
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-def generate_dataset(image_dir :str = "data/dataset", 
-                     transform: transforms.Compose = transform) -> ImageFolder:
+def generate_dataset(image_dir :str, 
+                     transform: transforms.Compose) -> ImageFolder:
     
     dataset = ImageFolder(root=image_dir, 
                           transform=transform)
     return dataset
 
 def generate_train_val_test_datasets(dataset, 
-                                 train_ratio: float = 0.7, 
-                                 val_ratio: float = 0.15, 
-                                 test_ratio: float = 0.15, 
-                                 random_seed: int = 42):
+                                 train_ratio: float, 
+                                 val_ratio: float, 
+                                 test_ratio: float, 
+                                 random_seed: int
+                                 ) -> tuple:
+    
     assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6, "Ratios must sum to 1"
     
     total_size = len(dataset)
@@ -43,7 +40,3 @@ def generate_train_val_test_datasets(dataset,
     )
     
     return train_ds, val_ds, test_ds
-
-if __name__ == "__main__":
-    dataset = generate_dataset()
-    print(f"Dataset size: {len(dataset)} images")

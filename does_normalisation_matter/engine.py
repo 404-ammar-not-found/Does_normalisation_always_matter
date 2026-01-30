@@ -1,27 +1,32 @@
 import torch.nn as nn
 import torch 
 
-def train_model(model_conv, 
-                train_dataloader, 
-                validation_dataloader,
-                BATCH_SIZE=32,
-                device='cuda' if torch.cuda.is_available() else 'cpu'):
-    learning_rate = 1e-3 * (BATCH_SIZE / 32)
+from tqdm import tqdm
 
-    weight_decay = 1e-6
-    patience = 10
-    verbose_ct = 1
-    num_epochs = 20  
+def train_model(model, 
+                train_dataloader : torch.utils.data.DataLoader, 
+                validation_dataloader : torch.utils.data.DataLoader,
+                device : str,
+                learning_rate : float,
+                weight_decay : float,
+                patience : int,
+                verbose_ct : int,
+                num_epochs : int):
 
-    criterion = nn.CrossEntropyLoss()  # change if needed
+    weight_decay = weight_decay
+    patience = patience
+    verbose_ct = verbose_ct
+    num_epochs = num_epochs  
+
+    criterion = nn.CrossEntropyLoss()  
 
     optimizer = torch.optim.Adam(
-        filter(lambda p: p.requires_grad, model_conv.parameters()),
+        filter(lambda p: p.requires_grad, model.parameters()),
         lr=learning_rate,
         weight_decay=weight_decay
     )
 
-    model_conv.to(device)
+    model.to(device)
 
     # =====================
     # Early Stopping State
@@ -36,14 +41,14 @@ def train_model(model_conv,
     for epoch in tqdm(range(1, num_epochs + 1)):
 
         # ---- Train ----
-        model_conv.train()
+        model.train()
         train_loss = 0.0
 
         for x, y in train_dataloader:
             x = x.to(device, non_blocking=True)
             y = y.to(device, non_blocking=True)
             optimizer.zero_grad()
-            preds = model_conv(x)
+            preds = model(x)
             loss = criterion(preds, y)
             loss.backward()
             optimizer.step()
@@ -53,13 +58,13 @@ def train_model(model_conv,
         train_loss /= len(train_dataloader.dataset)
 
         # ---- Validation ----
-        model_conv.eval()
+        model.eval()
         val_loss = 0.0
 
         with torch.no_grad():
             for x, y in validation_dataloader:
                 x, y = x.to(device), y.to(device)
-                preds = model_conv(x)
+                preds = model(x)
                 loss = criterion(preds, y)
                 val_loss += loss.item() * x.size(0)
 
@@ -76,7 +81,7 @@ def train_model(model_conv,
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             epochs_no_improve = 0
-            best_state_dict = {k: v.clone() for k, v in model_conv.state_dict().items()}
+            best_state_dict = {k: v.clone() for k, v in model.state_dict().items()}
         else:
             epochs_no_improve += 1
 
@@ -84,7 +89,5 @@ def train_model(model_conv,
             if verbose_ct:
                 print(f"Early stopping triggered at epoch {epoch}")
             break
-
-
-    if best_state_dict is not None:
-        model_conv.load_state_dict(best_state_dict)
+        
+    return model, best_state_dict

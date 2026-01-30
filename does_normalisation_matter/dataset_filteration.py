@@ -2,7 +2,9 @@ from collections import Counter
 from torchvision.datasets import ImageFolder
 
 
-def filter_small_classes(dataset: ImageFolder, min_samples: int):
+def filter_small_classes(dataset: ImageFolder, 
+                         min_samples: int
+                         ) -> ImageFolder:
     # Count samples per class index
     counts = Counter(dataset.targets)
 
